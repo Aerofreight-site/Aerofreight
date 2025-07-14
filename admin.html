@@ -1,1 +1,69 @@
-<!DOCTYPE html><html><head><title>Admin Dashboard</title></head><body><h1>Admin Panel</h1></body></html>
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AeroFreight Admin Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input, button { margin: 5px 0; padding: 8px; font-size: 16px; }
+    .entry { margin: 10px 0; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h1>AeroFreight Admin Dashboard</h1>
+
+  <h2>Add / Update Tracking Status</h2>
+  <input type="text" id="trackId" placeholder="Tracking ID" />
+  <input type="text" id="trackStatus" placeholder="Status (e.g. Delivered)" />
+  <button onclick="saveStatus()">Save Status</button>
+
+  <h2>All Tracking Entries</h2>
+  <div id="trackingList">Loading...</div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBja-EXzw8PfUxR3jfFdKjyYeobm-NZQJ8",
+      authDomain: "aerofreight-3fb8e.firebaseapp.com",
+      databaseURL: "https://aerofreight-3fb8e-default-rtdb.firebaseio.com",
+      projectId: "aerofreight-3fb8e",
+      storageBucket: "aerofreight-3fb8e.appspot.com",
+      messagingSenderId: "1090732973438",
+      appId: "1:1090732973438:web:1840e2926a6cfafbb2672f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    window.saveStatus = async function () {
+      const id = document.getElementById("trackId").value.trim();
+      const status = document.getElementById("trackStatus").value.trim();
+      if (!id || !status) return alert("Enter both Tracking ID and Status");
+
+      await set(ref(database, 'tracking/' + id), { status });
+      alert("Status saved!");
+      document.getElementById("trackId").value = "";
+      document.getElementById("trackStatus").value = "";
+    };
+
+    const trackingListDiv = document.getElementById("trackingList");
+    const trackingRef = ref(database, "tracking");
+
+    onValue(trackingRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        trackingListDiv.innerHTML = "<p>No tracking entries found.</p>";
+        return;
+      }
+      const data = snapshot.val();
+      trackingListDiv.innerHTML = Object.entries(data).map(([id, value]) => {
+        return `<div class="entry"><strong>${id}</strong>: ${value.status}</div>`;
+      }).join("");
+    });
+  </script>
+</body>
+</html>
