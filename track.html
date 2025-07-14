@@ -1,27 +1,60 @@
-<!DOCTYPE html><html><head><title>Track Delivery</title></head><body>
-<h1>Track Your Parcel</h1>
-<input type="text" placeholder="Enter Tracking ID"><button>Track</button>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getMessaging } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Track Your Parcel - AeroFreight</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+  <h1>Track Your Parcel</h1>
+  <input type="text" id="trackingId" placeholder="Enter Tracking ID" />
+  <button onclick="trackPackage()">Track</button>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBja-EXzw8PfUxR3jfFdKjyYeobm-NZQJ8",
-    authDomain: "aerofreight-3fb8e.firebaseapp.com",
-    databaseURL: "https://aerofreight-3fb8e-default-rtdb.firebaseio.com",
-    projectId: "aerofreight-3fb8e",
-    storageBucket: "aerofreight-3fb8e.appspot.com",
-    messagingSenderId: "1090732973438",
-    appId: "1:1090732973438:web:1840e2926a6cfafbb2672f",
-    measurementId: "G-WZEN7S7SZ3"
-  };
+  <div id="statusResult" style="margin-top: 20px; font-weight: bold;"></div>
 
-  const app = initializeApp(firebaseConfig);
-  const database = getDatabase(app);
-  const auth = getAuth(app);
-  const messaging = getMessaging(app);
-</script>
-</body></html>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBja-EXzw8PfUxR3jfFdKjyYeobm-NZQJ8",
+      authDomain: "aerofreight-3fb8e.firebaseapp.com",
+      databaseURL: "https://aerofreight-3fb8e-default-rtdb.firebaseio.com",
+      projectId: "aerofreight-3fb8e",
+      storageBucket: "aerofreight-3fb8e.appspot.com",
+      messagingSenderId: "1090732973438",
+      appId: "1:1090732973438:web:1840e2926a6cfafbb2672f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    window.trackPackage = async function () {
+      const trackingId = document.getElementById("trackingId").value.trim();
+      const resultDiv = document.getElementById("statusResult");
+
+      if (!trackingId) {
+        resultDiv.innerText = "Please enter a tracking ID.";
+        return;
+      }
+
+      const statusRef = ref(database, "tracking/" + trackingId);
+
+      try {
+        const snapshot = await get(statusRef);
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          resultDiv.innerText = "Status: " + data.status;
+        } else {
+          resultDiv.innerText = "Tracking ID not found.";
+        }
+      } catch (error) {
+        resultDiv.innerText = "Error fetching status.";
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>
